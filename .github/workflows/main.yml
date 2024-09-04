@@ -1,36 +1,26 @@
-name: Pryzma Action
+name: Pryzma CI
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
-  analyze:
+  get-paths:
     runs-on: ubuntu-latest
+    outputs:
+      file_paths: ${{ steps.find-paths.outputs.paths }}
     steps:
     - uses: actions/checkout@v4
 
-    - name: Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.x'
-
-    - name: Python Setup (jer koristimo python za ovo)
+    - name: Find paths
+      id: find-paths
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: AI analiza
-      env:
-        CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
-      run: |
-        python main.py
-
-    - name: upload results (json output od ai analize)
-      uses: actions/upload-artifact@v4
-      with:
-        name: analysis-results
-        path: results/
+        paths=$(find . \
+          -not \( -path './__tests__/*' -prune \) \
+          -not \( -path './node_modules/*' -prune \) \
+          -not \( -path './.git/*' -prune \) \
+          -type f \
+          -not \( -name '*.png' -o -name '*.jpg' -o -name '*.json' -o -name '*.md' \) \
+          -print)
+        echo "paths<<EOF" >> $GITHUB_OUTPUT
+        echo "$paths">> $GITHUB_OUTPUT
+        echo "EOF" >>$GITHUB_OUTPUT
