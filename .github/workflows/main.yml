@@ -2,6 +2,10 @@ name: Pryzma CI
 
 on:
   workflow_call:
+    outputs:
+      file_paths:
+        description: "List of file paths"
+        value: ${{ jobs.get-paths.outputs.file_paths }}
 
 jobs:
   get-paths:
